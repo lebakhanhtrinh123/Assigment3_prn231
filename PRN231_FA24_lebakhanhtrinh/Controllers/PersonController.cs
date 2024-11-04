@@ -16,11 +16,6 @@ namespace PRN231_FA24_lebakhanhtrinh_BE.Controllers
         {
             _personService = personService;
         }
-
-        // GET: api/person/{id}
- 
-
-        // POST: api/person
         [HttpPost]
         public async Task<IActionResult> AddPerson([FromBody] AddPersonRequest addPersonRequest)
         {
@@ -50,5 +45,19 @@ namespace PRN231_FA24_lebakhanhtrinh_BE.Controllers
             var person = await _personService.getPersonById(id);
             return Ok(person);
         }
+        [HttpDelete("{personId}")]
+        public async Task<IActionResult> DeletePerson(int personId)
+        {
+            try
+            {
+                var result = await _personService.DeletePerson(personId);
+                return Ok(new { Message = result });
+            }
+            catch (Exception ex)
+            {
+                return NotFound(new { Message = ex.Message });
+            }
+        }
     }
 }
+

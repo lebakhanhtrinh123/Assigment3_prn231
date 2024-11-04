@@ -16,5 +16,6 @@ namespace Service.Interface
         Task<GetPersonDTO> AddPersonAsync(AddPersonRequest addPersonRequest);
         Task<List<GetPersonResponse>> getPersons();
         Task<GetPersonByIdResponse> getPersonById(int personId);
+        Task<string> DeletePerson(int personId);
     }
 }

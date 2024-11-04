@@ -120,8 +120,29 @@ namespace Service.Implement
                 }).ToList()
             };
             return personResponse;
+        }
 
-
+        public async Task<string> DeletePerson(int personId)
+        {
+            var person = await _unitOfWork.Persons.Entities
+                       .Include(p => p.PersonViruses) 
+                         .ThenInclude(pv => pv.Virus)
+                        .FirstOrDefaultAsync(n => n.PersonId == personId);
+            if (person == null)
+            {
+                throw new Exception("Không tìm thấy người với ID đã cho."); 
+            }
+            if (person.PersonViruses.Any())
+            {
+                foreach (var personVirus in person.PersonViruses)
+                {
+                    await _unitOfWork.GetRepository<PersonVirus>().DeleteAsync(personVirus.VirusId); 
+                }
+            }
+            else
+            await _unitOfWork.Persons.DeleteAsync(personId);
+            await _unitOfWork.SaveAsync();
+            return "Person and related viruses deleted successfully";
         }
     }
 }
