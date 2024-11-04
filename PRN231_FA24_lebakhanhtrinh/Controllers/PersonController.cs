@@ -58,6 +58,24 @@ namespace PRN231_FA24_lebakhanhtrinh_BE.Controllers
                 return NotFound(new { Message = ex.Message });
             }
         }
+        [HttpPut("{personId}")]
+        public async Task<IActionResult> UpdatePerson(int personId, [FromBody] UpdatePersonRequest updatePersonRequest)
+        {
+            if (updatePersonRequest == null)
+            {
+                return BadRequest("Dữ liệu không hợp lệ.");
+            }
+
+            try
+            {
+                var result = await _personService.UpdatePerson(personId, updatePersonRequest);
+                return Ok(new { Message = result });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Có lỗi xảy ra: {ex.Message}");
+            }
+        }
     }
 }
 

@@ -17,5 +17,6 @@ namespace Service.Interface
         Task<List<GetPersonResponse>> getPersons();
         Task<GetPersonByIdResponse> getPersonById(int personId);
         Task<string> DeletePerson(int personId);
+        Task<string> UpdatePerson(int personId, UpdatePersonRequest updatePersonRequest);
     }
 }

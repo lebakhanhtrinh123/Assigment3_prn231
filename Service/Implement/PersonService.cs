@@ -144,5 +144,55 @@ namespace Service.Implement
             await _unitOfWork.SaveAsync();
             return "Person and related viruses deleted successfully";
         }
+
+        public async Task<string> UpdatePerson(int personId, UpdatePersonRequest updatePersonRequest)
+        {
+            var person = await _unitOfWork.Persons.Entities
+                       .Include(p => p.PersonViruses)
+                         .ThenInclude(pv => pv.Virus)
+                        .FirstOrDefaultAsync(n => n.PersonId == personId);
+            if (person == null)
+            {
+                throw new Exception("Không tìm thấy người với ID đã cho.");
+            }
+            person.Fullname = updatePersonRequest.Fullname;
+            person.BirthDay = DateOnly.FromDateTime(updatePersonRequest.BirthDay);
+            person.Phone = updatePersonRequest.Phone;
+            foreach (var virusRequest in updatePersonRequest.viruses ?? Enumerable.Empty<VirusRequest>())
+            {
+                var virus = await _unitOfWork.GetRepository<Virus>().Entities
+             .FirstOrDefaultAsync(v => v.VirusName == virusRequest.VirusName);
+
+                if (virus == null)
+                {
+                    // Nếu không tìm thấy virus, tạo mới
+                    virus = new Virus { VirusName = virusRequest.VirusName };
+                    await _unitOfWork.GetRepository<Virus>().AddAsync(virus);
+                }
+
+                var personVirus = person.PersonViruses.FirstOrDefault(pv => pv.VirusId == virus.VirusId);
+
+                if (personVirus == null)
+                {
+                    // Nếu không có liên kết hiện tại, thêm liên kết mới
+                    personVirus = new PersonVirus { VirusId = virus.VirusId, ResistanceRate = virusRequest.ResistanceRate };
+                    person.PersonViruses.Add(personVirus);
+                }
+                else
+                {
+                    // Cập nhật liên kết hiện có
+                    personVirus.ResistanceRate = virusRequest.ResistanceRate;
+                }
+
+
+            }
+
+            await _unitOfWork.Persons.UpdateAsync(person);
+            await _unitOfWork.SaveAsync();
+
+            return "Person and related viruses updated successfully";
+
+            throw new NotImplementedException();
+        }
     }
 }
