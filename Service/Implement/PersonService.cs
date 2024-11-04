@@ -3,6 +3,7 @@ using BusinessObject;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.EntityFrameworkCore;
 using Repository.Interface;
+using Repository.Reponse;
 using Repository.Request;
 using Repository.ViewModel;
 using Repository.ViewModel.AuthVM;
@@ -71,6 +72,56 @@ namespace Service.Implement
                 PersonId = person.PersonId,
                 Message = "Person and viruses added successfully"
             };
+        }
+
+        public async Task<List<GetPersonResponse>> getPersons() // Đổi tên hàm thành getPersons
+        {
+            var persons = await _unitOfWork.Persons.Entities
+                .Include(p => p.PersonViruses) // Bao gồm các virus liên quan
+                .ThenInclude(pv => pv.Virus)    // Bao gồm chi tiết virus
+                .ToListAsync();
+
+            // Tạo danh sách personResponse, không bao giờ là null
+            var personResponse = persons.Select(person => new GetPersonResponse
+            {
+                PersonId = person.PersonId,
+                Fullname = person.Fullname,
+                Phone = person.Phone,
+                BirthDay = person.BirthDay,
+                Viruses = person.PersonViruses.Select(pv => new GetVirusResponse
+                {
+                    VirusName = pv.Virus.VirusName,
+                    ResistanceRate = pv.ResistanceRate
+                }).ToList()
+            }).ToList();
+
+            return personResponse; // Trả về danh sách, sẽ là một danh sách rỗng nếu không có người
+        }
+
+        public async Task<GetPersonByIdResponse> getPersonById(int personId)
+        {
+            var person = await _unitOfWork.Persons.Entities
+               .Include(p => p.PersonViruses)
+               .ThenInclude(pv => pv.Virus)
+               .FirstOrDefaultAsync(n => n.PersonId == personId);
+            if(person == null)
+            {
+                return null;
+            }
+            var personResponse = new GetPersonByIdResponse
+            {
+                Fullname = person.Fullname,
+                Phone = person.Phone,
+                BirthDay = person.BirthDay,
+                Viruses = person.PersonViruses.Select(pv => new GetVirusResponse
+                {
+                    VirusName = pv.Virus.VirusName,
+                    ResistanceRate = pv.ResistanceRate
+                }).ToList()
+            };
+            return personResponse;
+
+
         }
     }
 }

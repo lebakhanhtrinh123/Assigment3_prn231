@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using BusinessObject;
+using Repository.Reponse;
 using Repository.ViewModel;
 
 namespace Service.Mapper
@@ -8,8 +9,7 @@ namespace Service.Mapper
     {
         public PersonProfile()
         {
-            CreateMap<PersonDTO, Person>();
-            CreateMap<Person, PersonDTO>();
+            CreateMap<GetPersonResponse, Person>().ReverseMap();
         }
     }
 }

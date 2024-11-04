@@ -1,4 +1,5 @@
-﻿using Repository.Request;
+﻿using Repository.Reponse;
+using Repository.Request;
 using Repository.ViewModel;
 using Repository.ViewModel.AuthVM;
 using System;
@@ -13,5 +14,7 @@ namespace Service.Interface
     {
         Task<PersonDTO> GetPersonAsync(int id);
         Task<GetPersonDTO> AddPersonAsync(AddPersonRequest addPersonRequest);
+        Task<List<GetPersonResponse>> getPersons();
+        Task<GetPersonByIdResponse> getPersonById(int personId);
     }
 }

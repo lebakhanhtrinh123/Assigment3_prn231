@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Repository.Reponse;
 using Repository.Request;
 using Repository.ViewModel;
 using Service.Interface;
@@ -17,16 +18,7 @@ namespace PRN231_FA24_lebakhanhtrinh_BE.Controllers
         }
 
         // GET: api/person/{id}
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetPerson(int id)
-        {
-            var personDto = await _personService.GetPersonAsync(id);
-            if (personDto == null)
-            {
-                return NotFound(); // Trả về 404 nếu không tìm thấy
-            }
-            return Ok(personDto); // Trả về 200 OK với dữ liệu
-        }
+ 
 
         // POST: api/person
         [HttpPost]
@@ -39,7 +31,24 @@ namespace PRN231_FA24_lebakhanhtrinh_BE.Controllers
 
             var result = await _personService.AddPersonAsync(addPersonRequest);
 
-            return CreatedAtAction(nameof(GetPerson), new { id = result.PersonId }, result); // Trả về 201 Created với DTO kết quả
+            return CreatedAtAction(nameof(GetPersonById), new { id = result.PersonId }, result); // Trả về 201 Created với DTO kết quả
+        }
+
+        [HttpGet("get-all")]
+        public async Task<ActionResult<List<GetPersonResponse>>> GetPersons()
+        {
+            var persons = await _personService.getPersons();
+            if (persons == null || persons.Count == 0)
+            {
+                return NotFound("Không tìm thấy người nào.");
+            }
+            return Ok(persons); // Trả về 200 OK với danh sách người
+        }
+        [HttpGet("get-by-id/{id}")]
+        public async Task<ActionResult<GetPersonResponse>> GetPersonById(int id)
+        {
+            var person = await _personService.getPersonById(id);
+            return Ok(person);
         }
     }
 }
