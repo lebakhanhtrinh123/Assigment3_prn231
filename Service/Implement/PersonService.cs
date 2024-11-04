@@ -1,7 +1,11 @@
 ﻿using AutoMapper;
 using BusinessObject;
+using Microsoft.AspNetCore.Identity.Data;
+using Microsoft.EntityFrameworkCore;
 using Repository.Interface;
+using Repository.Request;
 using Repository.ViewModel;
+using Repository.ViewModel.AuthVM;
 using Service.Interface;
 using System;
 using System.Collections.Generic;
@@ -28,11 +32,45 @@ namespace Service.Implement
             return _mapper.Map<PersonDTO>(person);
         }
 
-        public async Task AddPersonAsync(PersonDTO personDto)
+        public async Task<GetPersonDTO> AddPersonAsync(AddPersonRequest addPersonRequest)
         {
-            var person = _mapper.Map<Person>(personDto);
-            await _unitOfWork.Persons.AddAsync(person);
+            Person? person = new Person
+            {
+                
+                PersonId = addPersonRequest.PersonId,
+                Fullname = addPersonRequest.Fullname,
+                BirthDay = DateOnly.FromDateTime(addPersonRequest.BirthDay),
+                Phone = addPersonRequest.Phone,
+                PersonViruses = new List<PersonVirus>()
+            };
+            foreach (var virusRequest in addPersonRequest.viruses ?? Enumerable.Empty<VirusRequest>())
+            {
+                var virus = await _unitOfWork.GetRepository<Virus>()
+                                     .Entities
+                                     .FirstOrDefaultAsync(v => v.VirusName == virusRequest.VirusName);
+                if (virus == null)
+                {
+                    virus = new Virus { VirusId = 4 , VirusName = virusRequest.VirusName ,Treatment = "Acyclovir" };
+                    await _unitOfWork.GetRepository<Virus>().AddAsync(virus);
+                }
+                var personVirus = new PersonVirus
+                {
+                    PersonId = person.PersonId,
+                    VirusId = virus.VirusId,
+                    ResistanceRate = virusRequest.ResistanceRate
+                };
+                await _unitOfWork.GetRepository<PersonVirus>().AddAsync(personVirus);
+            }
+            await _unitOfWork.GetRepository<Person>().AddAsync(person);
+
             await _unitOfWork.SaveAsync();
+
+
+            return new GetPersonDTO()
+            {
+                PersonId = person.PersonId,
+                Message = "Person and viruses added successfully"
+            };
         }
     }
 }

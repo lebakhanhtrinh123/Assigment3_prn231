@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Repository.ViewModel.AuthVM
 {
-    public class GetTokenDTO
+    public class GetPersonDTO
     {
-        public string AccessToken { get; set; } = string.Empty;
-        public int ExpiresIn { get; set; }
+        public int PersonId { get; set; }
+        public string Message { get; set; } = string.Empty;
     }
 }

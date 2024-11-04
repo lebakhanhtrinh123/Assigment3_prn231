@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Repository.Request;
 using Repository.ViewModel;
 using Service.Interface;
 
@@ -29,15 +30,16 @@ namespace PRN231_FA24_lebakhanhtrinh_BE.Controllers
 
         // POST: api/person
         [HttpPost]
-        public async Task<IActionResult> AddPerson([FromBody] PersonDTO personDto)
+        public async Task<IActionResult> AddPerson([FromBody] AddPersonRequest addPersonRequest)
         {
-            if (personDto == null)
+            if (addPersonRequest == null)
             {
-                return BadRequest(); // Trả về 400 nếu DTO không hợp lệ
+                return BadRequest("Invalid person data."); // Trả về 400 nếu DTO không hợp lệ
             }
 
-            await _personService.AddPersonAsync(personDto);
-            return CreatedAtAction(nameof(GetPerson), new { id = personDto.PersonId }, personDto); // Trả về 201 Created
+            var result = await _personService.AddPersonAsync(addPersonRequest);
+
+            return CreatedAtAction(nameof(GetPerson), new { id = result.PersonId }, result); // Trả về 201 Created với DTO kết quả
         }
     }
 }

@@ -8,7 +8,9 @@ namespace Repository.ViewModel.AuthVM
 {
     public class GetLoginDTO
     {
+        
+        public string Message { get; set; } = string.Empty;
+        public string Token { get; set; } = string.Empty;
         public UserDTO User { get; set; } = new UserDTO();
-        public GetTokenDTO Token { get; set; } = new GetTokenDTO();
     }
 }

@@ -46,15 +46,20 @@ namespace Service.Implement
             }
             if (user.Password != HashPasswordService.HashPasswordThrice(loginRequest.Password))
             {
-                throw new ErrorException(StatusCodes.Status401Unauthorized, ErrorCode.UnAuthorized, "Tên đăng nhâp hoặc hoặc mật khẩu không đúng!");
+                throw new ErrorException(StatusCodes.Status401Unauthorized, ErrorCode.UnAuthorized, "Tên đăng nhập hoặc mật khẩu không đúng!");
             }
-            GetTokenDTO token = GenerateTokens(user);
+
+            string token = GenerateToken(user);
+
+            var userDto = mapper.Map<UserDTO>(user);
+            userDto.Role = user.Role == 1 ? "admin" : "user";
+
             return new GetLoginDTO()
             {
-                User = mapper.Map<UserDTO>(user),
-                Token = token
+                Message = "Login successful",
+                Token = token,
+                User = userDto
             };
-           
         }
 
         public async Task<string> Register(RegisterRequest registerRequest)
@@ -66,12 +71,15 @@ namespace Service.Implement
             }
             ViroCureUser user = new ViroCureUser
             {
+                UserId = 6,
                 Email = registerRequest.Email,
                 Password = HashPasswordService.HashPasswordThrice(registerRequest.Password),
                 Role = 1
             };
             Person person = new Person
             {
+                PersonId = 5,
+                UserId = user.UserId,
                 Fullname = registerRequest.Fullname,
                 BirthDay = DateOnly.FromDateTime(registerRequest.BirthDay), 
                 Phone = registerRequest.Phone,
@@ -81,14 +89,14 @@ namespace Service.Implement
             await unitOfWork.SaveAsync();
             return "thành công";
         }
-        public GetTokenDTO GenerateTokens(ViroCureUser user)
+        public string GenerateToken(ViroCureUser user)
         {
             try
             {
                 var jwtSettings = configuration.GetSection("Jwt");
-                string secretKey = jwtSettings["SecretKey"];
-                string issuer = jwtSettings["Issuer"];
-                string audience = jwtSettings["Audience"];
+                string? secretKey = jwtSettings["SecretKey"];
+                string? issuer = jwtSettings["Issuer"];
+                string? audience = jwtSettings["Audience"];
                 if (!int.TryParse(jwtSettings["ExpirationInMinutes"], out int expirationInMinutes))
                 {
                     throw new Exception("Invalid or missing ExpirationInMinutes configuration");
@@ -113,13 +121,7 @@ namespace Service.Implement
                     signingCredentials: credentials
                 );
 
-                string tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-
-                return new GetTokenDTO
-                {
-                    AccessToken = tokenString,
-                    ExpiresIn = expirationInMinutes * 60
-                };
+                return new JwtSecurityTokenHandler().WriteToken(token);
             }
             catch (Exception ex)
             {
