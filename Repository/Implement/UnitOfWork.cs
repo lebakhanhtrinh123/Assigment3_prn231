@@ -55,12 +55,12 @@ namespace Repository.Implement
 
         public void RollBack()
         {
-            // Logic to roll back a transaction
+            _context.Database.RollbackTransaction();
         }
 
         public void Dispose()
         {
-            _context.Database.RollbackTransaction();
+            _context.Dispose();
         }
     }
 }

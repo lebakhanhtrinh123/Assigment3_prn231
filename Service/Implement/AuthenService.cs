@@ -54,17 +54,32 @@ namespace Service.Implement
                 User = mapper.Map<UserDTO>(user),
                 Token = token
             };
+           
         }
 
         public async Task<string> Register(RegisterRequest registerRequest)
         {
-            ViroCureUser? user = await unitOfWork.GetRepository<ViroCureUser>().Entities.FirstOrDefaultAsync(p => p.Email == registerRequest.Email);
-            if (user == null)
+            ViroCureUser? users = await unitOfWork.GetRepository<ViroCureUser>().Entities.FirstOrDefaultAsync(p => p.Email == registerRequest.Email);
+            if (users != null)
             {
                 throw new ErrorException(StatusCodes.Status409Conflict, ErrorCode.Conflicted, "Tên đăng nhập này đã tồn tại!");
             }
-
-            throw new NotImplementedException();
+            ViroCureUser user = new ViroCureUser
+            {
+                Email = registerRequest.Email,
+                Password = HashPasswordService.HashPasswordThrice(registerRequest.Password),
+                Role = 1
+            };
+            Person person = new Person
+            {
+                Fullname = registerRequest.Fullname,
+                BirthDay = DateOnly.FromDateTime(registerRequest.BirthDay), 
+                Phone = registerRequest.Phone,
+            };
+            await unitOfWork.GetRepository<ViroCureUser>().AddAsync(user);
+            await unitOfWork.GetRepository<Person>().AddAsync(person);
+            await unitOfWork.SaveAsync();
+            return "thành công";
         }
         public GetTokenDTO GenerateTokens(ViroCureUser user)
         {
@@ -74,7 +89,10 @@ namespace Service.Implement
                 string secretKey = jwtSettings["SecretKey"];
                 string issuer = jwtSettings["Issuer"];
                 string audience = jwtSettings["Audience"];
-                int expirationInMinutes = int.Parse(jwtSettings["ExpirationInMinutes"]);
+                if (!int.TryParse(jwtSettings["ExpirationInMinutes"], out int expirationInMinutes))
+                {
+                    throw new Exception("Invalid or missing ExpirationInMinutes configuration");
+                }
 
                 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
                 var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -105,7 +123,7 @@ namespace Service.Implement
             }
             catch (Exception ex)
             {
-                throw new Exception("Lỗi khi tạo JWT token", ex);
+                throw new Exception("Error generating JWT token", ex);
             }
         }
     }
